@@ -71,6 +71,10 @@ app.get("/api/news", async (req, res) => {
   }
 });
 
+app.get("/", (_req, res) => {
+  res.redirect("/index.html");
+});
+
 app.get("*", (_req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
