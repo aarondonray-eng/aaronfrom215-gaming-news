@@ -20,10 +20,41 @@ function setHero(article){if(!article)return;document.querySelector("#heroCatego
 function renderAll(term=""){const query=term.trim().toLowerCase();const filter=items=>query?items.filter(item=>[item.title,item.description,item.source].some(value=>String(value||"").toLowerCase().includes(query))):items;const trending=filter(store.All).slice(0,5);document.querySelector("#trendingGrid").innerHTML=trending.length?trending.map((item,index)=>card(item,{rank:index+1,featured:index===0})).join(""):state("No stories found",query?"Try another search.":"Check back in a moment.");document.querySelector("#resultCount").textContent=`${filter(store.All).length} stories loaded`;categories.forEach(({key})=>{const items=filter(store[key]).slice(0,4);document.querySelector(`[data-grid="${key}"]`).innerHTML=items.length?items.map(item=>card(item)).join(""):state("No stories found",query?"Try another search.":"Fresh headlines are on the way.")})}
 async function loadNews(){buildSections();document.querySelector("#trendingGrid").innerHTML=skeletons(3);const keys=["All",...categories.map(({key})=>key)];const results=await Promise.allSettled(keys.map(fetchCategory));results.forEach((result,index)=>{if(result.status==="fulfilled")store[keys[index]]=result.value});const first=store.All[0]||categories.map(({key})=>store[key][0]).find(Boolean);setHero(first);renderAll();if(results.every(result=>result.status==="rejected"))document.querySelector("#resultCount").textContent="News temporarily unavailable"}
 function toast(message){const el=document.querySelector("#toast");el.textContent=message;el.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),2600)}
+let installPrompt=null;
+const installDialog=document.querySelector("#installDialog");
+const installMessage=document.querySelector("#installMessage");
+const dialogInstall=document.querySelector("#dialogInstall");
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+
+window.addEventListener("beforeinstallprompt",event=>{event.preventDefault();installPrompt=event});
+window.addEventListener("appinstalled",()=>{installPrompt=null;document.querySelector("#installButton").hidden=true;installDialog.close();toast("AGamey installed!")});
+
+function showInstall(){
+  if(isStandalone)return toast("AGamey is already installed.");
+  installMessage.textContent=isIOS?"On iPhone or iPad, tap the Share button in your browser, then choose Add to Home Screen.":"Get faster access to the latest gaming news in a full-screen app experience.";
+  dialogInstall.textContent=isIOS?"Got it":"Install AGamey";
+  installDialog.showModal();
+}
+
+async function installApp(){
+  if(isIOS){installDialog.close();return}
+  if(!installPrompt){installMessage.textContent="Your browser's install option is in its main menu. Look for Install app or Add to Home screen.";dialogInstall.textContent="Close";return}
+  await installPrompt.prompt();
+  const choice=await installPrompt.userChoice;
+  if(choice.outcome!=="accepted")toast("You can install anytime from the Install App button.");
+  installPrompt=null;installDialog.close();
+}
 document.querySelector("#searchInput").addEventListener("input",event=>renderAll(event.target.value));
 document.querySelector("#mobileSearch").addEventListener("click",()=>{const header=document.querySelector(".site-header");header.classList.toggle("search-open");if(header.classList.contains("search-open"))document.querySelector("#searchInput").focus()});
 document.querySelector(".menu-toggle").addEventListener("click",event=>{const header=document.querySelector(".site-header");const open=header.classList.toggle("menu-open");event.currentTarget.setAttribute("aria-expanded",String(open))});
 document.querySelectorAll(".main-nav a").forEach(link=>link.addEventListener("click",()=>document.querySelector(".site-header").classList.remove("menu-open")));
 document.querySelectorAll('[data-placeholder="social"]').forEach(link=>link.addEventListener("click",event=>{event.preventDefault();toast("Social link coming soon — add your profile URL here.")}));
+document.querySelector("#installButton").addEventListener("click",showInstall);
+document.querySelector("#dialogInstall").addEventListener("click",installApp);
+document.querySelector("#dialogClose").addEventListener("click",()=>installDialog.close());
+installDialog.addEventListener("click",event=>{if(event.target===installDialog)installDialog.close()});
+if(isStandalone)document.querySelector("#installButton").hidden=true;
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
 document.querySelector("#year").textContent=new Date().getFullYear();
 loadNews();
