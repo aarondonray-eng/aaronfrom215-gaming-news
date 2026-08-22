@@ -1,6 +1,8 @@
 # AaronFrom215 Gaming News
 
-A responsive gaming-news site powered by NewsAPI, with platform filters, search, trending stories, and locally saved favorites.
+A responsive, English-only gaming-news site powered by NewsAPI, with platform filters, search, and gaming-only trending stories.
+
+The server uses English-only requests, gaming-specific queries, category validation, blocked-topic filtering, and relevance scoring that favors major franchises and established gaming outlets.
 
 ## Run locally
 
@@ -9,6 +11,8 @@ A responsive gaming-news site powered by NewsAPI, with platform filters, search,
 3. Copy `.env.example` to `.env`.
 4. Put your NewsAPI key in `.env`.
 5. Run `npm start` and open `http://localhost:3000`.
+
+Run `npm test` to verify the content filters.
 
 Never commit `.env`; it is intentionally excluded by `.gitignore`.
 
