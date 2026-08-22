@@ -4,8 +4,20 @@ const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const NEWS_API_KEY = process.env.NEWS_API_KEY;
 const PUBLIC_DIR = path.join(__dirname, "public");
+
+const RSS_SOURCES = [
+  { name: "PlayStation Blog", url: "https://blog.playstation.com/feed/", category: "PlayStation" },
+  { name: "Xbox Wire", url: "https://news.xbox.com/en-us/feed/", category: "Xbox" },
+  { name: "Nintendo Life", url: "https://www.nintendolife.com/feeds/latest", category: "Nintendo" },
+  { name: "Push Square", url: "https://www.pushsquare.com/feeds/latest", category: "PlayStation" },
+  { name: "Pure Xbox", url: "https://www.purexbox.com/feeds/latest", category: "Xbox" },
+  { name: "PC Gamer", url: "https://www.pcgamer.com/rss/", category: "PC" },
+  { name: "Gematsu", url: "https://www.gematsu.com/feed/", category: "All" },
+  { name: "Operation Sports", url: "https://www.operationsports.com/feed/", category: "Sports" }
+];
+const CACHE_MS = 30 * 60 * 1000;
+const feedCache = { articles: [], fetchedAt: 0, refreshPromise: null };
 
 const gamingQueries = {
   All: '("video game" OR gaming OR PlayStation OR PS5 OR Xbox OR Nintendo OR Switch OR Steam OR "PC gaming" OR "game developer" OR "game studio") AND (announce OR release OR launch OR trailer OR gameplay OR update OR patch OR DLC OR expansion OR delay OR showcase OR review)',
@@ -63,24 +75,114 @@ function rankArticles(articles, category) {
   return articles.filter((article) => isGamingArticle(article, category)).map((article) => ({ article, score: scoreArticle(article, category) })).sort((a, b) => b.score - a.score || new Date(b.article.publishedAt || 0) - new Date(a.article.publishedAt || 0)).map(({ article }) => article);
 }
 
+function decodeEntities(value = "") {
+  return String(value)
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replace(/&#(\d+);/g, (_match, code) => String.fromCodePoint(Number(code)))
+    .replace(/&#x([\da-f]+);/gi, (_match, code) => String.fromCodePoint(parseInt(code, 16)))
+    .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;|&#39;/g, "'");
+}
+
+function stripHtml(value = "") {
+  return decodeEntities(value).replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function tagValue(block, names) {
+  for (const name of names) {
+    const match = block.match(new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${name}>`, "i"));
+    if (match) return decodeEntities(match[1]).trim();
+  }
+  return "";
+}
+
+function attributeValue(block, tags, attribute) {
+  for (const tag of tags) {
+    const match = block.match(new RegExp(`<${tag}\\b[^>]*\\b${attribute}=["']([^"']+)["'][^>]*>`, "i"));
+    if (match) return decodeEntities(match[1]);
+  }
+  return "";
+}
+
+function parseFeed(xml, source) {
+  const blocks = xml.match(/<item\b[\s\S]*?<\/item>|<entry\b[\s\S]*?<\/entry>/gi) || [];
+  return blocks.map((block) => {
+    const rawDescription = tagValue(block, ["description", "summary", "content:encoded", "content"]);
+    const title = stripHtml(tagValue(block, ["title"]));
+    const url = tagValue(block, ["link"]) || attributeValue(block, ["link"], "href");
+    const image = attributeValue(block, ["media:content", "media:thumbnail", "enclosure"], "url") || (rawDescription.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] || "");
+    return {
+      title,
+      description: stripHtml(rawDescription).slice(0, 320),
+      image: image || null,
+      url,
+      source: { name: source.name },
+      publishedAt: tagValue(block, ["pubDate", "published", "updated", "dc:date"]) || new Date().toISOString(),
+      feedCategory: source.category
+    };
+  }).filter((article) => article.title && /^https?:\/\//i.test(article.url));
+}
+
+async function fetchFeed(source) {
+  const response = await fetch(source.url, {
+    headers: { "User-Agent": "AaronFrom215GamingNews/1.0 (+https://aaronfrom215-gaming-news.onrender.com)", Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml" },
+    signal: AbortSignal.timeout(12000)
+  });
+  if (!response.ok) throw new Error(`${source.name} returned ${response.status}`);
+  return parseFeed(await response.text(), source);
+}
+
+async function refreshFeeds() {
+  if (feedCache.refreshPromise) return feedCache.refreshPromise;
+  feedCache.refreshPromise = Promise.allSettled(RSS_SOURCES.map(fetchFeed)).then((results) => {
+    const fresh = results.flatMap((result) => result.status === "fulfilled" ? result.value : []);
+    results.forEach((result, index) => {
+      if (result.status === "rejected") console.warn(`RSS feed unavailable: ${RSS_SOURCES[index].name}: ${result.reason.message}`);
+    });
+    if (fresh.length) {
+      const seen = new Set();
+      feedCache.articles = fresh.filter((article) => {
+        const key = normalize(article.url || article.title);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      feedCache.fetchedAt = Date.now();
+    }
+    return feedCache.articles;
+  }).finally(() => { feedCache.refreshPromise = null; });
+  return feedCache.refreshPromise;
+}
+
+async function getFeedArticles() {
+  if (feedCache.articles.length && Date.now() - feedCache.fetchedAt < CACHE_MS) return feedCache.articles;
+  return refreshFeeds();
+}
+
 app.disable("x-powered-by");
 app.use(express.static(PUBLIC_DIR, { maxAge: "1h", etag: true }));
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
 app.get("/api/news", async (req, res) => {
-  if (!NEWS_API_KEY) return res.status(503).json({ error: "The server is missing its NEWS_API_KEY environment variable." });
-  const category = Object.hasOwn(gamingQueries, req.query.category) ? req.query.category : "All";
-  const params = new URLSearchParams({ q: gamingQueries[category], language: "en", sortBy: "publishedAt", searchIn: "title,description", pageSize: "100" });
+  const category = Object.hasOwn(categoryTerms, req.query.category) ? req.query.category : "All";
   try {
-    const response = await fetch(`https://newsapi.org/v2/everything?${params}`, { headers: { "X-Api-Key": NEWS_API_KEY }, signal: AbortSignal.timeout(10000) });
-    const data = await response.json();
-    if (!response.ok) return res.status(response.status).json({ error: data.message || "NewsAPI request failed." });
-    const articles = rankArticles(data.articles || [], category).slice(0, 40).map((article) => ({ title: article.title, description: article.description || "Open the full story for more details.", image: article.urlToImage || null, url: article.url, source: article.source?.name || "Gaming News", publishedAt: article.publishedAt, category }));
-    res.set("Cache-Control", "public, max-age=300");
+    const feedArticles = await getFeedArticles();
+    const categoryPool = category === "All"
+      ? feedArticles
+      : feedArticles.filter((article) => article.feedCategory === category || article.feedCategory === "All");
+    const articles = rankArticles(categoryPool, category).slice(0, 40).map((article) => ({
+      title: article.title,
+      description: article.description || "Open the original story for more details.",
+      image: article.image || null,
+      url: article.url,
+      source: article.source?.name || "Gaming News",
+      publishedAt: article.publishedAt,
+      category
+    }));
+    res.set("Cache-Control", "public, max-age=600, stale-while-revalidate=1800");
     return res.json({ category, count: articles.length, articles });
   } catch (error) {
-    console.error("News request failed:", error.message);
-    return res.status(502).json({ error: "Gaming news is temporarily unavailable. Please try again." });
+    console.error("RSS request failed:", error.message);
+    return res.status(502).json({ error: "Gaming news feeds are temporarily unavailable. Please try again." });
   }
 });
 
@@ -88,4 +190,4 @@ app.get("/", (_req, res) => res.redirect("/index.html"));
 app.get("*", (_req, res) => res.sendFile(path.join(PUBLIC_DIR, "index.html")));
 if (require.main === module) app.listen(PORT, "0.0.0.0", () => console.log(`AaronFrom215 Gaming News is running on port ${PORT}`));
 
-module.exports = { app, isEnglishText, isGamingArticle, rankArticles, scoreArticle };
+module.exports = { app, isEnglishText, isGamingArticle, parseFeed, rankArticles, scoreArticle };
