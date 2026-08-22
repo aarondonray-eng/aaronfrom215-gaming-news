@@ -3,234 +3,39 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#080808">
-  <meta name="description" content="The latest gaming news from PlayStation, Xbox, Nintendo, PC and sports games.">
+  <meta name="theme-color" content="#080708">
+  <meta name="description" content="AaronFrom215 Gaming News — the latest stories from PlayStation, Xbox, Nintendo, PC and 2K/Sports.">
+  <meta property="og:title" content="AaronFrom215 Gaming News">
+  <meta property="og:description" content="The game never stops. Neither do we.">
   <title>AaronFrom215 Gaming News</title>
-  <style>
-    :root { --red:#ff3131; --red2:#ff5b5b; --bg:#080808; --panel:#141414; --muted:#a5a5a5; --line:#292929; }
-    * { box-sizing:border-box; }
-    html { scroll-behavior:smooth; }
-    body { margin:0; background:var(--bg); color:#fff; font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif; }
-    button,input { font:inherit; }
-    button { cursor:pointer; }
-    a { color:inherit; }
-    header { position:sticky; top:0; z-index:20; display:grid; grid-template-columns:auto 1fr minmax(220px,360px); align-items:center; gap:28px; padding:16px 5%; background:rgba(8,8,8,.92); border-bottom:1px solid var(--line); backdrop-filter:blur(16px); }
-    .logo { font-size:clamp(18px,2vw,25px); font-weight:950; letter-spacing:-.8px; white-space:nowrap; }
-    .logo span { color:var(--red); }
-    nav { display:flex; justify-content:center; gap:6px; }
-    .nav-btn,.filter-btn { border:1px solid transparent; background:transparent; color:#aaa; border-radius:999px; padding:9px 14px; font-weight:750; }
-    .nav-btn:hover,.nav-btn.active,.filter-btn:hover,.filter-btn.active { color:#fff; background:var(--red); }
-    .search { position:relative; }
-    .search input { width:100%; padding:11px 16px 11px 40px; border:1px solid #333; border-radius:999px; background:#191919; color:#fff; outline:none; }
-    .search input:focus { border-color:var(--red); box-shadow:0 0 0 3px rgba(255,49,49,.14); }
-    .search::before { content:"⌕"; position:absolute; left:15px; top:6px; color:#aaa; font-size:24px; }
-    .hero { min-height:520px; display:flex; align-items:center; padding:70px 5%; background:linear-gradient(90deg,rgba(0,0,0,.98) 5%,rgba(0,0,0,.68) 54%,rgba(0,0,0,.2)),url("https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1800&q=80") center/cover; }
-    .hero-content { max-width:700px; }
-    .badge { display:inline-block; padding:7px 13px; border-radius:999px; background:var(--red); font-size:13px; font-weight:900; letter-spacing:.8px; }
-    h1 { margin:18px 0; font-size:clamp(52px,8vw,92px); line-height:.88; letter-spacing:-4px; }
-    .hero p { max-width:620px; color:#d5d5d5; font-size:clamp(17px,2vw,20px); line-height:1.6; }
-    .primary-btn { margin-top:10px; padding:13px 20px; border:0; border-radius:9px; background:var(--red); color:#fff; font-weight:900; box-shadow:0 10px 28px rgba(255,49,49,.25); }
-    .primary-btn:hover { background:#e52323; transform:translateY(-1px); }
-    main { min-height:500px; padding:46px 5% 90px; }
-    .page { display:none; }
-    .page.active { display:block; }
-    .section-header { display:flex; justify-content:space-between; align-items:end; gap:20px; margin-bottom:20px; }
-    h2 { margin:0; font-size:clamp(27px,4vw,40px); letter-spacing:-1px; }
-    .result-count { color:var(--muted); }
-    .filters { display:flex; gap:9px; overflow:auto; padding-bottom:16px; margin-bottom:10px; scrollbar-width:none; }
-    .filter-btn { flex:0 0 auto; background:#151515; border-color:#303030; }
-    .news-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; }
-    .card { overflow:hidden; display:flex; flex-direction:column; min-width:0; border:1px solid var(--line); border-radius:16px; background:var(--panel); transition:transform .2s,border-color .2s,box-shadow .2s; }
-    .card:hover { transform:translateY(-5px); border-color:#5a2929; box-shadow:0 18px 45px rgba(0,0,0,.35); }
-    .card-media { position:relative; aspect-ratio:16/9; overflow:hidden; background:linear-gradient(135deg,#241313,#121212); }
-    .card-media img { width:100%; height:100%; object-fit:cover; transition:transform .35s; }
-    .card:hover img { transform:scale(1.04); }
-    .trend-number { position:absolute; left:12px; top:12px; padding:7px 10px; border-radius:8px; background:var(--red); font-weight:950; }
-    .card-content { display:flex; flex:1; flex-direction:column; padding:18px; }
-    .category { color:var(--red2); font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:1px; }
-    .card h3 { margin:8px 0; font-size:20px; line-height:1.25; }
-    .card p { display:-webkit-box; overflow:hidden; margin:0 0 15px; color:var(--muted); line-height:1.5; -webkit-line-clamp:3; -webkit-box-orient:vertical; }
-    .meta { margin-top:auto; color:#777; font-size:13px; }
-    .card-footer { display:flex; align-items:center; justify-content:space-between; margin-top:16px; }
-    .read-btn { padding:0; border:0; background:transparent; color:var(--red2); font-weight:900; }
-    .save-btn { width:40px; height:40px; border:1px solid #363636; border-radius:50%; background:#222; color:#fff; font-size:21px; }
-    .save-btn.saved { border-color:var(--red); background:var(--red); }
-    .state { grid-column:1/-1; padding:70px 25px; border:1px dashed #333; border-radius:16px; text-align:center; color:var(--muted); }
-    .state h3 { margin:0 0 8px; color:#fff; font-size:24px; }
-    .skeleton { min-height:360px; background:linear-gradient(100deg,#121212 20%,#202020 45%,#121212 70%); background-size:200% 100%; animation:shine 1.2s infinite; }
-    @keyframes shine { to { background-position:-200% 0; } }
-    footer { padding:30px 5% 90px; border-top:1px solid #222; color:#777; text-align:center; }
-    .bottom-nav { display:none; }
-    @media (max-width:950px) { header { grid-template-columns:auto 1fr; } header nav { display:none; } .search { justify-self:end; width:min(360px,100%); } .news-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-    @media (max-width:640px) { header { gap:12px; padding:13px 4%; } .logo { font-size:18px; } .search { grid-column:1/-1; width:100%; } .hero { min-height:450px; padding:60px 5%; } h1 { letter-spacing:-2.5px; } main { padding:35px 4% 110px; } .news-grid { grid-template-columns:1fr; } .section-header { align-items:start; flex-direction:column; gap:5px; } .bottom-nav { position:fixed; inset:auto 0 0; z-index:30; display:grid; grid-template-columns:repeat(3,1fr); padding:7px 8px max(7px,env(safe-area-inset-bottom)); border-top:1px solid #303030; background:rgba(12,12,12,.96); backdrop-filter:blur(15px); } .mobile-nav { border:0; background:transparent; color:#888; padding:7px; font-size:12px; font-weight:800; } .mobile-nav span { display:block; font-size:20px; } .mobile-nav.active { color:var(--red2); } footer { padding-bottom:95px; } }
-    @media (prefers-reduced-motion:reduce) { * { scroll-behavior:auto!important; transition:none!important; animation:none!important; } }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
 </head>
-<body>
-  <header>
-    <div class="logo">AaronFrom215 <span>Gaming</span></div>
-    <nav aria-label="Main navigation">
-      <button class="nav-btn active" data-page="home">Home</button>
-      <button class="nav-btn" data-page="trending">Trending</button>
-      <button class="nav-btn" data-page="favorites">Saved</button>
-    </nav>
-    <label class="search"><span hidden>Search stories</span><input id="searchInput" type="search" placeholder="Search gaming news…" autocomplete="off"></label>
+<body id="top">
+  <a class="skip-link" href="#main">Skip to news</a>
+  <div class="topline"><span>LIVE</span> Your daily feed for everything gaming</div>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="AaronFrom215 Gaming News home"><span class="brand-mark">A215</span><span class="brand-name">AARON<span>FROM215</span><small>GAMING NEWS</small></span></a>
+    <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
+    <nav class="main-nav" aria-label="Main navigation"><a href="#breaking">Breaking</a><a href="#trending">Trending</a><a href="#playstation">PlayStation</a><a href="#xbox">Xbox</a><a href="#nintendo">Nintendo</a><a href="#pc">PC</a><a href="#sports">2K / Sports</a></nav>
+    <label class="search"><span class="sr-only">Search all loaded stories</span><input id="searchInput" type="search" placeholder="Search news" autocomplete="off"><b aria-hidden="true">⌕</b></label>
   </header>
-
-  <section class="hero" id="hero">
-    <div class="hero-content">
-      <span class="badge">🔥 GAMING NEWS</span>
-      <h1>Gaming News.<br>No Fluff.</h1>
-      <p>Stay locked in with the biggest stories from PlayStation, Xbox, Nintendo, PC gaming, sports games and more.</p>
-      <button class="primary-btn" id="browseButton">Browse Latest</button>
-    </div>
-  </section>
-
-  <main id="news">
-    <section class="page active" id="home">
-      <div class="section-header"><h2>Latest News</h2><span class="result-count" id="resultCount"></span></div>
-      <div class="filters" aria-label="News categories">
-        <button class="filter-btn active" data-category="All">All</button>
-        <button class="filter-btn" data-category="PlayStation">PlayStation</button>
-        <button class="filter-btn" data-category="Xbox">Xbox</button>
-        <button class="filter-btn" data-category="Nintendo">Nintendo</button>
-        <button class="filter-btn" data-category="PC">PC</button>
-        <button class="filter-btn" data-category="Sports">Sports</button>
-      </div>
-      <div class="news-grid" id="homeGrid" aria-live="polite"></div>
+  <main id="main">
+    <section class="breaking" id="breaking" aria-labelledby="breakingTitle">
+      <div class="breaking-backdrop" id="heroBackdrop"></div>
+      <div class="breaking-content"><div class="eyebrow"><i class="pulse"></i> Breaking News</div><p class="hero-kicker" id="heroCategory">Top Story</p><h1 id="breakingTitle">Loading the biggest story in gaming…</h1><p class="hero-summary" id="heroSummary">Your daily gaming feed is warming up.</p><div class="hero-meta" id="heroMeta"></div><a class="button disabled" id="heroLink" href="#trending" target="_blank" rel="noopener noreferrer">Read full story <span>↗</span></a></div>
+      <div class="hero-index"><strong>01</strong><span>THE LEAD</span></div>
     </section>
-    <section class="page" id="trending"><div class="section-header"><h2>🔥 Trending</h2></div><div class="news-grid" id="trendingGrid"></div></section>
-    <section class="page" id="favorites"><div class="section-header"><h2>⭐ Saved Stories</h2></div><div class="news-grid" id="favoritesGrid"></div></section>
+    <div class="ticker" aria-label="Featured categories"><div>PLAYSTATION <span>✦</span> XBOX <span>✦</span> NINTENDO <span>✦</span> PC GAMING <span>✦</span> NBA 2K <span>✦</span> ESPORTS <span>✦</span></div></div>
+    <section class="news-section section-dark" id="trending"><div class="section-heading"><div><span class="section-number">01</span><p>What players are reading</p><h2>Trending <em>Now</em></h2></div><span class="result-count" id="resultCount">Loading…</span></div><div class="trending-grid" id="trendingGrid" aria-live="polite"></div></section>
+    <div id="categorySections"></div>
+    <section class="newsletter"><div><p class="eyebrow">Stay in the game</p><h2>THE NEWS HITS<br><em>DIFFERENT</em> HERE.</h2></div><p>Fresh gaming headlines, strong opinions, and the stories worth your time. Follow AaronFrom215 and never miss the drop.</p><div class="social-links" aria-label="Social links"><a href="#" data-placeholder="social">YouTube <span>↗</span></a><a href="#" data-placeholder="social">TikTok <span>↗</span></a><a href="#" data-placeholder="social">Instagram <span>↗</span></a><a href="#" data-placeholder="social">X / Twitter <span>↗</span></a></div></section>
   </main>
-
-  <footer>© <span id="year"></span> AaronFrom215 Gaming News 🎮</footer>
-  <div class="bottom-nav" aria-label="Mobile navigation">
-    <button class="mobile-nav active" data-page="home"><span>⌂</span>Home</button>
-    <button class="mobile-nav" data-page="trending"><span>🔥</span>Trending</button>
-    <button class="mobile-nav" data-page="favorites"><span>★</span>Saved</button>
-  </div>
-
-  <script>
-    const fallbackImage = "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1000&q=80";
-    let articles = [];
-    let selectedCategory = "All";
-    let savedArticles = readSaved();
-    let activePage = "home";
-    let requestController;
-
-    const homeGrid = document.querySelector("#homeGrid");
-    const trendingGrid = document.querySelector("#trendingGrid");
-    const favoritesGrid = document.querySelector("#favoritesGrid");
-    const searchInput = document.querySelector("#searchInput");
-    const resultCount = document.querySelector("#resultCount");
-
-    function readSaved() {
-      try { return JSON.parse(localStorage.getItem("savedArticles")) || []; }
-      catch { return []; }
-    }
-
-    function escapeHTML(value = "") {
-      return String(value).replace(/[&<>'"]/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#39;", '"':"&quot;" })[char]);
-    }
-
-    function formatDate(value) {
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return "Recently";
-      const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-      if (seconds < 60) return "Just now";
-      if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
-      if (seconds < 86400) return `${Math.floor(seconds / 3600)} hr ago`;
-      if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
-      return date.toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" });
-    }
-
-    function isSaved(url) { return savedArticles.some((item) => item.url === url); }
-
-    function card(article, rank = null) {
-      const encodedURL = encodeURIComponent(article.url);
-      return `<article class="card">
-        <div class="card-media"><img src="${escapeHTML(article.image || fallbackImage)}" alt="" loading="lazy" onerror="this.onerror=null;this.src='${fallbackImage}'">${rank ? `<span class="trend-number">#${rank}</span>` : ""}</div>
-        <div class="card-content"><span class="category">${escapeHTML(article.category || selectedCategory)}</span><h3>${escapeHTML(article.title)}</h3><p>${escapeHTML(article.description)}</p>
-        <div class="meta">${escapeHTML(article.source)} • ${formatDate(article.publishedAt)}</div>
-        <div class="card-footer"><button class="read-btn" data-open="${encodedURL}">Read Story →</button><button class="save-btn ${isSaved(article.url) ? "saved" : ""}" data-save="${encodedURL}" aria-label="${isSaved(article.url) ? "Remove saved story" : "Save story"}">${isSaved(article.url) ? "★" : "☆"}</button></div></div>
-      </article>`;
-    }
-
-    function filteredArticles() {
-      const term = searchInput.value.trim().toLowerCase();
-      if (!term) return articles;
-      return articles.filter((a) => [a.title,a.description,a.source].some((v) => String(v || "").toLowerCase().includes(term)));
-    }
-
-    function empty(title, message) { return `<div class="state"><h3>${escapeHTML(title)}</h3><div>${escapeHTML(message)}</div></div>`; }
-
-    function render() {
-      const filtered = filteredArticles();
-      homeGrid.innerHTML = filtered.length ? filtered.map((a) => card(a)).join("") : empty("No stories found 🎮", "Try another search or category.");
-      trendingGrid.innerHTML = articles.length ? articles.slice(0,12).map((a,i) => card(a,i+1)).join("") : empty("No trending stories", "Check back in a moment.");
-      favoritesGrid.innerHTML = savedArticles.length ? savedArticles.map((a) => card(a)).join("") : empty("No saved stories yet ⭐", "Tap the star on a story to save it here.");
-      resultCount.textContent = `${filtered.length} ${filtered.length === 1 ? "story" : "stories"}`;
-    }
-
-    async function loadNews(category = "All") {
-      selectedCategory = category;
-      requestController?.abort();
-      requestController = new AbortController();
-      homeGrid.innerHTML = '<div class="state skeleton" aria-label="Loading stories"></div>';
-      resultCount.textContent = "Loading…";
-      try {
-        const response = await fetch(`/api/news?category=${encodeURIComponent(category)}`, { signal:requestController.signal });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Unable to load news.");
-        articles = data.articles || [];
-        render();
-      } catch (error) {
-        if (error.name === "AbortError") return;
-        articles = [];
-        homeGrid.innerHTML = empty("Couldn't load gaming news", error.message);
-        resultCount.textContent = "";
-        renderSidePages();
-      }
-    }
-
-    function renderSidePages() {
-      trendingGrid.innerHTML = empty("No trending stories", "Try refreshing the page.");
-      favoritesGrid.innerHTML = savedArticles.length ? savedArticles.map((a) => card(a)).join("") : empty("No saved stories yet ⭐", "Tap the star on a story to save it here.");
-    }
-
-    function showPage(page) {
-      activePage = page;
-      document.querySelectorAll(".page").forEach((el) => el.classList.toggle("active", el.id === page));
-      document.querySelectorAll("[data-page]").forEach((el) => el.classList.toggle("active", el.dataset.page === page));
-      document.querySelector("#hero").hidden = page !== "home";
-      document.querySelector("#news").scrollIntoView({ behavior:"smooth", block:"start" });
-    }
-
-    document.addEventListener("click", (event) => {
-      const pageButton = event.target.closest("[data-page]");
-      if (pageButton) return showPage(pageButton.dataset.page);
-      const filter = event.target.closest("[data-category]");
-      if (filter) {
-        document.querySelectorAll("[data-category]").forEach((el) => el.classList.toggle("active", el === filter));
-        return loadNews(filter.dataset.category);
-      }
-      const open = event.target.closest("[data-open]");
-      if (open) return window.open(decodeURIComponent(open.dataset.open), "_blank", "noopener,noreferrer");
-      const save = event.target.closest("[data-save]");
-      if (save) {
-        const url = decodeURIComponent(save.dataset.save);
-        const source = [...articles,...savedArticles].find((a) => a.url === url);
-        if (!source) return;
-        savedArticles = isSaved(url) ? savedArticles.filter((a) => a.url !== url) : [source,...savedArticles];
-        localStorage.setItem("savedArticles", JSON.stringify(savedArticles));
-        return render();
-      }
-    });
-
-    searchInput.addEventListener("input", render);
-    document.querySelector("#browseButton").addEventListener("click", () => document.querySelector("#news").scrollIntoView({ behavior:"smooth" }));
-    document.querySelector("#year").textContent = new Date().getFullYear();
-    loadNews();
-  </script>
+  <footer><a class="brand" href="#top"><span class="brand-mark">A215</span><span class="brand-name">AARON<span>FROM215</span><small>GAMING NEWS</small></span></a><p>Independent gaming news. Built for the players.</p><p>© <span id="year"></span> AaronFrom215 Gaming News</p></footer>
+  <div class="mobile-bar" aria-label="Mobile navigation"><a href="#breaking"><span>⌂</span>Home</a><a href="#trending"><span>🔥</span>Trending</a><a href="#playstation"><span>▣</span>Platforms</a><button id="mobileSearch" type="button"><span>⌕</span>Search</button></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/app.js" defer></script>
 </body>
 </html>
