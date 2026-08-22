@@ -160,6 +160,11 @@ async function getFeedArticles() {
 
 app.disable("x-powered-by");
 app.use(express.static(PUBLIC_DIR, { maxAge: "1h", etag: true }));
+app.use("/api", (_req, res, next) => {
+  res.set("Access-Control-Allow-Origin", "*");
+  res.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+  next();
+});
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
 app.get("/api/news", async (req, res) => {

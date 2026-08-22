@@ -1,0 +1,7 @@
+{
+  "appId": "com.aaronfrom215.agamey",
+  "appName": "AGamey",
+  "webDir": "public",
+  "server": {"androidScheme":"https","iosScheme":"https"},
+  "plugins": {"SplashScreen":{"launchShowDuration":1500,"backgroundColor":"#080708","showSpinner":false}}
+}
