@@ -14,7 +14,13 @@ const RSS_SOURCES = [
   { name: "Pure Xbox", url: "https://www.purexbox.com/feeds/latest", category: "Xbox" },
   { name: "PC Gamer", url: "https://www.pcgamer.com/rss/", category: "PC" },
   { name: "Gematsu", url: "https://www.gematsu.com/feed/", category: "All" },
-  { name: "Operation Sports", url: "https://www.operationsports.com/feed/", category: "Sports" }
+  { name: "Operation Sports", url: "https://www.operationsports.com/feed/", category: "Sports" },
+  { name: "GameSpot", url: "https://www.gamespot.com/feeds/mashup/", category: "All" },
+  { name: "GamesRadar+", url: "https://www.gamesradar.com/feeds/all/", category: "All" },
+  { name: "VGC", url: "https://www.videogameschronicle.com/feed/", category: "All" },
+  { name: "Destructoid", url: "https://www.destructoid.com/feed/", category: "All" },
+  { name: "Eurogamer", url: "https://www.eurogamer.net/feed", category: "All" },
+  { name: "Rock Paper Shotgun", url: "https://www.rockpapershotgun.com/feed", category: "PC" }
 ];
 const CACHE_MS = 30 * 60 * 1000;
 const feedCache = { articles: [], fetchedAt: 0, refreshPromise: null };
