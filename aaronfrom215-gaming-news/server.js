@@ -55,6 +55,7 @@ const reputableSources = ["ign", "gamespot", "game informer", "polygon", "euroga
 
 const normalize = (value = "") => String(value).toLowerCase().replace(/\s+/g, " ").trim();
 const includesAny = (text, terms) => terms.some((term) => text.includes(term));
+const includesHardware = (text) => hardwareTerms.some((term) => new RegExp(`\\b${term}s?\\b`, "i").test(text));
 
 function isEnglishText(text) {
   if (/[\u0400-\u052f\u0600-\u06ff\u0900-\u097f\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/u.test(text)) return false;
@@ -67,11 +68,11 @@ function scoreArticle(article, category = "All") {
   const body = normalize(`${article.title || ""} ${article.description || ""} ${article.content || ""}`);
   const source = normalize(article.source?.name);
   let score = includesAny(title, gamingCoreTerms) ? 5 : includesAny(body, gamingCoreTerms) ? 3 : 0;
-  if (includesAny(body, hardwareTerms)) score += 5;
+  if (includesHardware(body)) score += 5;
   score += includesAny(title, newsTerms) ? 3 : includesAny(body, newsTerms) ? 1 : 0;
   if (includesAny(body, majorFranchises)) score += 3;
   if (includesAny(source, reputableSources)) score += 4;
-  if (category !== "All" && includesAny(body, categoryTerms[category])) score += 4;
+  if (category !== "All" && (category === "Hardware" ? includesHardware(body) : includesAny(body, categoryTerms[category]))) score += 4;
   if (article.urlToImage) score += 1;
   return score;
 }
@@ -81,8 +82,9 @@ function isGamingArticle(article, category = "All") {
   const body = normalize(`${article.title} ${article.description || ""} ${article.content || ""}`);
   if (!isEnglishText(body) || includesAny(body, blockedTerms)) return false;
   if (/\bbest\b.{0,80}\bdeals?\b|\bamazon\b.{0,80}\bdeals?\b/i.test(article.title)) return false;
-  if (!includesAny(body, [...gamingCoreTerms, ...majorFranchises, ...hardwareTerms])) return false;
-  if (category !== "All" && !includesAny(body, categoryTerms[category])) return false;
+  if (!includesAny(body, [...gamingCoreTerms, ...majorFranchises]) && !includesHardware(body)) return false;
+  if (category === "Hardware" && !includesHardware(normalize(article.title)) && !(article.feedCategory === "Hardware" && includesHardware(body))) return false;
+  if (category !== "All" && category !== "Hardware" && !includesAny(body, categoryTerms[category])) return false;
   return scoreArticle(article, category) >= (category === "All" ? 5 : 7);
 }
 
