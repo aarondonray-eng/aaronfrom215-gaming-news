@@ -102,3 +102,4 @@ footer{font-size:11px;color:#b0a6ac;flex-wrap:wrap}
 .trailer-card:hover{transform:translateY(-4px)}
 .trailer-card:focus-within{border-color:var(--red)}
 @media(max-width:900px){.trailer-grid{grid-template-columns:1fr}.trailer-card{max-width:720px;width:100%}.trailer-intro{font-size:14px}}
+.brand-mark.brand-logo{object-fit:contain;transform:none;background:transparent;box-shadow:none;border-radius:8px}
