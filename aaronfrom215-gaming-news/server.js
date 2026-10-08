@@ -20,7 +20,11 @@ const RSS_SOURCES = [
   { name: "VGC", url: "https://www.videogameschronicle.com/feed/", category: "All" },
   { name: "Destructoid", url: "https://www.destructoid.com/feed/", category: "All" },
   { name: "Eurogamer", url: "https://www.eurogamer.net/feed", category: "All" },
-  { name: "Rock Paper Shotgun", url: "https://www.rockpapershotgun.com/feed", category: "PC" }
+  { name: "Rock Paper Shotgun", url: "https://www.rockpapershotgun.com/feed", category: "PC" },
+  { name: "PCGamesN", url: "https://www.pcgamesn.com/mainrss.xml", category: "All" },
+  { name: "Tom's Hardware", url: "https://www.tomshardware.com/feeds.xml", category: "Hardware" },
+  { name: "TechPowerUp", url: "https://www.techpowerup.com/rss/news", category: "Hardware" },
+  { name: "Wccftech", url: "https://wccftech.com/feed/", category: "All" }
 ];
 const CACHE_MS = 30 * 60 * 1000;
 const feedCache = { articles: [], fetchedAt: 0, refreshPromise: null };
@@ -33,8 +37,10 @@ const gamingQueries = {
   PC: '("PC game" OR "PC gaming" OR Steam OR "Epic Games Store" OR GOG) AND (release OR trailer OR update OR patch OR DLC OR studio OR showcase)',
   Sports: '("sports video game" OR "NBA 2K" OR Madden OR "College Football" OR "EA Sports FC" OR "MLB The Show" OR NHL) AND (game OR gameplay OR release OR trailer OR update OR patch OR DLC)'
 };
+const hardwareTerms = ["graphics card", "gpu", "geforce", "radeon", "ryzen", "processor", "cpu", "motherboard", "ssd", "dram", "ddr5", "gaming monitor", "gaming mouse", "gaming mice", "gaming keyboard", "mechanical keyboard", "gaming headset", "headphones", "controller", "dualsense", "flight stick", "racing wheel", "steam deck", "rog ally", "gaming handheld", "gaming laptop", "gaming chair", "gaming desk", "gaming pc", "pc hardware", "power supply", "cpu cooler"];
 const categoryTerms = {
   All: [],
+  Hardware: hardwareTerms,
   PlayStation: ["playstation", "ps5", "ps4", "sony interactive", "playstation studios"],
   Xbox: ["xbox", "game pass", "series x", "series s", "microsoft gaming", "xbox game studios"],
   Nintendo: ["nintendo", "switch", "mario", "zelda", "pokemon"],
@@ -44,8 +50,8 @@ const categoryTerms = {
 const gamingCoreTerms = ["video game", "videogame", "gaming", "gameplay", "gamer", "playstation", "ps5", "xbox", "game pass", "nintendo", "switch 2", "nintendo switch", "steam", "pc game", "esports", "dlc", "expansion pack", "game developer", "game studio", "game publisher", "patch notes", "early access", "console game"];
 const newsTerms = ["announce", "reveal", "release", "launch", "trailer", "update", "patch", "dlc", "expansion", "delay", "showcase", "direct", "state of play", "developer", "studio", "publisher", "gameplay", "review", "remaster", "remake", "beta", "season", "roadmap", "demo", "early access", "acquisition", "layoff"];
 const majorFranchises = ["grand theft auto", "gta 6", "call of duty", "nba 2k", "madden", "college football", "ea sports fc", "god of war", "ghost of yotei", "ghost of tsushima", "zelda", "mario", "pokemon", "fortnite", "minecraft", "elden ring", "resident evil", "final fantasy", "assassin's creed", "battlefield", "halo", "forza"];
-const blockedTerms = ["cryptocurrency", "crypto market", "bitcoin", "ethereum", "blockchain", "prediction market", "polymarket", "stock price", "stock market", "wall street", "investor", "investment", "finance", "cftc", "interest rate", "university", "college admission", "scholarship", "curriculum", "online degree", "education policy", "amazon deal", "best deal", "coupon", "promo code", "black friday", "prime day", "shopping guide", "gaming chair", "gaming-chair", "gaming desk", "gaming mouse", "gaming keyboard", "headset deal", "monitor deal", "laptop deal", "sports betting", "betting odds", "casino", "lottery", "gift guide"];
-const reputableSources = ["ign", "gamespot", "game informer", "polygon", "eurogamer", "vgc", "gamesradar", "pc gamer", "rock paper shotgun", "nintendo life", "push square", "pure xbox", "xbox wire", "playstation blog", "nintendo", "steam", "the verge", "ars technica", "associated press", "reuters", "bloomberg", "game developer", "gematsu", "destructoid"];
+const blockedTerms = ["cryptocurrency", "crypto market", "bitcoin", "ethereum", "blockchain", "prediction market", "polymarket", "stock price", "stock market", "wall street", "investor", "investment", "finance", "cftc", "interest rate", "university", "college admission", "scholarship", "curriculum", "online degree", "education policy", "amazon deal", "best deal", "coupon", "promo code", "black friday", "prime day", "shopping guide", "headset deal", "monitor deal", "laptop deal", "sports betting", "betting odds", "casino", "lottery", "gift guide"];
+const reputableSources = ["ign", "gamespot", "game informer", "polygon", "eurogamer", "vgc", "gamesradar", "pc gamer", "rock paper shotgun", "nintendo life", "push square", "pure xbox", "xbox wire", "playstation blog", "nintendo", "steam", "the verge", "ars technica", "associated press", "reuters", "bloomberg", "game developer", "gematsu", "destructoid", "pcgamesn", "tom's hardware", "techpowerup", "wccftech"];
 
 const normalize = (value = "") => String(value).toLowerCase().replace(/\s+/g, " ").trim();
 const includesAny = (text, terms) => terms.some((term) => text.includes(term));
@@ -61,6 +67,7 @@ function scoreArticle(article, category = "All") {
   const body = normalize(`${article.title || ""} ${article.description || ""} ${article.content || ""}`);
   const source = normalize(article.source?.name);
   let score = includesAny(title, gamingCoreTerms) ? 5 : includesAny(body, gamingCoreTerms) ? 3 : 0;
+  if (includesAny(body, hardwareTerms)) score += 5;
   score += includesAny(title, newsTerms) ? 3 : includesAny(body, newsTerms) ? 1 : 0;
   if (includesAny(body, majorFranchises)) score += 3;
   if (includesAny(source, reputableSources)) score += 4;
@@ -73,6 +80,8 @@ function isGamingArticle(article, category = "All") {
   if (!article?.title || !article?.url || article.title === "[Removed]") return false;
   const body = normalize(`${article.title} ${article.description || ""} ${article.content || ""}`);
   if (!isEnglishText(body) || includesAny(body, blockedTerms)) return false;
+  if (/\bbest\b.{0,80}\bdeals?\b|\bamazon\b.{0,80}\bdeals?\b/i.test(article.title)) return false;
+  if (!includesAny(body, [...gamingCoreTerms, ...majorFranchises, ...hardwareTerms])) return false;
   if (category !== "All" && !includesAny(body, categoryTerms[category])) return false;
   return scoreArticle(article, category) >= (category === "All" ? 5 : 7);
 }
@@ -177,7 +186,7 @@ app.get("/api/news", async (req, res) => {
   const category = Object.hasOwn(categoryTerms, req.query.category) ? req.query.category : "All";
   try {
     const feedArticles = await getFeedArticles();
-    const categoryPool = category === "All"
+    const categoryPool = category === "All" || category === "Hardware"
       ? feedArticles
       : feedArticles.filter((article) => article.feedCategory === category || article.feedCategory === "All");
     const articles = rankArticles(categoryPool, category).slice(0, 40).map((article) => ({
@@ -202,3 +211,4 @@ app.get("*", (_req, res) => res.sendFile(path.join(PUBLIC_DIR, "index.html")));
 if (require.main === module) app.listen(PORT, "0.0.0.0", () => console.log(`AaronFrom215 Gaming News is running on port ${PORT}`));
 
 module.exports = { app, isEnglishText, isGamingArticle, parseFeed, rankArticles, scoreArticle };
+
