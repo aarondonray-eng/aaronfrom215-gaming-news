@@ -3,13 +3,15 @@ const categories=[
   {key:"Xbox",id:"xbox",label:"Xbox",tagline:"Power your dreams",number:"03",theme:"panel"},
   {key:"Nintendo",id:"nintendo",label:"Nintendo",tagline:"Play your way",number:"04",theme:"light"},
   {key:"PC",id:"pc",label:"PC Gaming",tagline:"The cutting edge",number:"05",theme:"panel"},
-  {key:"Sports",id:"sports",label:"2K / Sports",tagline:"Built for competition",number:"06",theme:"light"}
+  {key:"Sports",id:"sports",label:"2K / Sports",tagline:"Built for competition",number:"06",theme:"light"},
+  {key:"Hardware",id:"hardware",label:"Hardware & Accessories",tagline:"Upgrade your play",number:"07",theme:"panel"}
 ];
 const fallbackImage="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80";
 const API_BASE=window.Capacitor?.isNativePlatform?.()?"https://aaronfrom215-gaming-news.onrender.com":"";
 const store={All:[],...Object.fromEntries(categories.map(({key})=>[key,[]]))};
 const saved=new Set(JSON.parse(localStorage.getItem("agamey-saved")||"[]"));
 const preferred=new Set(JSON.parse(localStorage.getItem("agamey-platforms")||JSON.stringify(categories.map(({key})=>key))));
+if(!localStorage.getItem("agamey-hardware-added")){preferred.add("Hardware");localStorage.setItem("agamey-platforms",JSON.stringify([...preferred]));localStorage.setItem("agamey-hardware-added","1");}
 const escapeHTML=(value="")=>String(value).replace(/[&<>'"]/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[char]);
 const clean=(value="")=>String(value).replace(/\s+/g," ").replace(/\[…\]|\[&hellip;\]/gi,"…").trim();
 const allArticles=()=>Object.values(store).flat().filter((item,index,items)=>items.findIndex(other=>other.url===item.url)===index);
@@ -47,3 +49,4 @@ if(isStandalone)document.querySelector("#installButton").hidden=true;
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
 document.querySelector("#year").textContent=new Date().getFullYear();
 loadNews();
+
